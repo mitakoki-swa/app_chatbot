@@ -1,42 +1,46 @@
 import streamlit as st
 
 def init_page():
-    '''stleamlit 初期化'''
+    """ ページ設定 """
     st.set_page_config(
-        page_title = 'Echo Bot'
+        page_title = "Echo Bot"
     )
-    st.title('Echo Bot')
+    st.title("Echo Bot")
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
 
-def init_chat():
-    if 'messages' not in st.session_state:
-        st.session_state['messages'] = []
 
-def print_chat_log():
-    '''chatの履歴を表示'''
+def get_llm_response(query):
+    """ LLMにクエリを送信し、回答を取得 """
+    # ここの関数を完成させてください。
+    return "LLMの生成結果"
+
+
+def chat_interface():
+    """ chat機能全般 """
+    # ログ表示
     for message in st.session_state.messages:
-        with st.chat_message(message['role']):
-            st.markdown(message['content'])
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
 
-def create_chat(prompt):
-    '''promptを読み取りbotが返信する'''
-    # 入力を出力
-    with st.chat_message('user'):
-        st.markdown(prompt)
-    # 入力したchatを履歴に追加
-    st.session_state.messages.append({'role':'user', 'content':prompt})
-    # botが返信
-    response = f'echo:{prompt}'
-    with st.chat_message('assistant'):
-        st.markdown(response)
-    # botの返答を履歴に追加
-    st.session_state.messages.append({'role':'assistant', 'content':response})
+    query = st.chat_input("質問を入力")
+    if query:
+        answer = get_llm_response()
+
+        with st.chat_message("user"):
+            st.write(query)
+
+        with st.chat_message("assistant"):
+            st.write(answer)
+
+    # 履歴に追加
+    st.session_state.messages.append({"role": "user", "content": query})
+    st.session_state.messages.append({"role": "assistant", "content": answer})
+
 
 def main():
-    init_chat()
-    print_chat_log()
-    if prompt := st.chat_input('What is up?'):
-        create_chat(prompt)
-
-if __name__ == '__main__':
     init_page()
+    chat_interface()
+
+if __name__ == "__main__":
     main()
