@@ -1,5 +1,6 @@
 import streamlit as st
 
+
 def init_page():
     """ ページ設定 """
     st.set_page_config(
@@ -21,7 +22,7 @@ def chat_interface():
     # ログ表示
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+            st.write(message["content"])
 
     query = st.chat_input("質問を入力")
     if query:
