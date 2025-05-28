@@ -1,5 +1,8 @@
-import streamlit as st
+import os
 
+import streamlit as st
+from dotenv import load_dotenv
+from openai import OpenAI
 
 def init_page():
     """ ページ設定 """
@@ -13,7 +16,20 @@ def init_page():
 
 def get_llm_response(query):
     """ LLMにクエリを送信し、回答を取得 """
-    # ここの関数を完成させてください。
+    with st.spinner("返答を考えています..."):
+        load_dotenv()
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        response = client.chat.completions.create(
+            model = "gpt-3.5-turbo",
+            messages = [
+                {"role": "system", "content": "あなたは日本のSES企業の事情に精通するスペシャリストです"},
+                {"role": "user", "content": query}
+            ]
+        )
+        report = response.choices[0].message.content
+        return report
+
+
     return "LLMの生成結果"
 
 
@@ -26,17 +42,17 @@ def chat_interface():
 
     query = st.chat_input("質問を入力")
     if query:
-        answer = get_llm_response()
+        answer = get_llm_response(query)
 
         with st.chat_message("user"):
             st.write(query)
 
         with st.chat_message("assistant"):
             st.write(answer)
-
-    # 履歴に追加
-    st.session_state.messages.append({"role": "user", "content": query})
-    st.session_state.messages.append({"role": "assistant", "content": answer})
+        
+        # 履歴に追加
+        st.session_state.messages.append({"role": "user", "content": query})
+        st.session_state.messages.append({"role": "assistant", "content": answer})
 
 
 def main():
