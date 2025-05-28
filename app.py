@@ -1,8 +1,10 @@
 import os
-
 import streamlit as st
-from dotenv import load_dotenv
 from openai import OpenAI
+
+from dotenv import load_dotenv
+load_dotenv()
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def init_page():
     """ ページ設定 """
@@ -10,30 +12,28 @@ def init_page():
         page_title = "Echo Bot"
     )
     st.title("Echo Bot")
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
+    if "chat_log" not in st.session_state:
+        st.session_state.chat_log = [{"role": "system", "content": "あなたは日本のSES企業の事情に精通するスペシャリストです"}]
 
 
 def get_llm_response(query):
     """ LLMにクエリを送信し、回答を取得 """
-    with st.spinner("返答を考えています..."):
-        load_dotenv()
-        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        response = client.chat.completions.create(
-            model = "gpt-3.5-turbo",
-            messages = [
-                {"role": "system", "content": "あなたは日本のSES企業の事情に精通するスペシャリストです"},
-                {"role": "user", "content": query}
-            ]
-        )
-        report = response.choices[0].message.content
-        return report
+    messages = {"role": "user", "content": query}
+    # 履歴に追加(user)
+    st.session_state.chat_log.append(messages)
+    response = client.chat.completions.create(
+        model = "gpt-4o-mini",
+        messages = st.session_state.chat_log,
+        temperature = 0
+    )
+    answer = response.choices[0].message.content
+    return answer
 
 
 def chat_interface():
     """ chat機能全般 """
     # ログ表示
-    for message in st.session_state.messages:
+    for message in st.session_state.chat_log[1:]:
         with st.chat_message(message["role"]):
             st.write(message["content"])
 
@@ -46,11 +46,8 @@ def chat_interface():
 
         with st.chat_message("assistant"):
             st.write(answer)
-        
-        # 履歴に追加
-        st.session_state.messages.append({"role": "user", "content": query})
-        st.session_state.messages.append({"role": "assistant", "content": answer})
-
+        # 履歴に追加(assistant)
+        st.session_state.chat_log.append({"role": "assistant", "content": answer})
 
 def main():
     init_page()
