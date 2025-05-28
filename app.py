@@ -30,9 +30,6 @@ def get_llm_response(query):
         return report
 
 
-    return "LLMの生成結果"
-
-
 def chat_interface():
     """ chat機能全般 """
     # ログ表示
