@@ -13,17 +13,24 @@ def init_page():
     )
     st.title("Echo Bot")
     if "chat_log" not in st.session_state:
-        st.session_state.chat_log = [{"role": "system", "content": "あなたは日本のSES企業の事情に精通するスペシャリストです"}]
+        st.session_state.chat_log = []
 
 
 def get_llm_response(query):
     """ LLMにクエリを送信し、回答を取得 """
-    messages = {"role": "user", "content": query}
-    # 履歴に追加(user)
-    st.session_state.chat_log.append(messages)
+    # システムプロンプト入力
+    messages = [{"role": "system", "content": "あなたは日本のSES企業の事情に精通するスペシャリストです"}]
+    # 過去プロンプトを順番に追加
+    messages += [
+        {"role": "assistant", "content": log["content"]} if log["role"] == "assistant"
+         else {"role": "user", "content": log["content"]}
+         for log in st.session_state.chat_log
+    ]
+    # 今回のプロンプトを追加
+    messages += [{"role": "user", "content": query}]
     response = client.chat.completions.create(
         model = "gpt-4o-mini",
-        messages = st.session_state.chat_log,
+        messages = messages,
         temperature = 0
     )
     answer = response.choices[0].message.content
@@ -33,7 +40,7 @@ def get_llm_response(query):
 def chat_interface():
     """ chat機能全般 """
     # ログ表示
-    for message in st.session_state.chat_log[1:]:
+    for message in st.session_state.chat_log:
         with st.chat_message(message["role"]):
             st.write(message["content"])
 
@@ -46,7 +53,8 @@ def chat_interface():
 
         with st.chat_message("assistant"):
             st.write(answer)
-        # 履歴に追加(assistant)
+        # 履歴に追加
+        st.session_state.chat_log.append({"role": "user", "content": query})
         st.session_state.chat_log.append({"role": "assistant", "content": answer})
 
 def main():
