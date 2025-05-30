@@ -8,5 +8,5 @@ class OpenAIClient:
         load_dotenv()
 
         # OpenAI のクライアント設定
-        self.client = "OpenAIのクライアントを立てる"
-        self.model = "モデル名"
+        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.model = "gpt-4o-mini"
