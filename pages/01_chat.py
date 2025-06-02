@@ -21,8 +21,6 @@ def init_page():
 
 def get_prompt(filepath):
     """ システムプロンプトの取得 """
-    # ここ埋めてみてください。
-    # pythonのwith句とopen関数を使用します。ついでに、それらの機能も調べていただけると。
     with open(filepath, "r", encoding="utf-8") as f:
         return f.read()
 
@@ -41,7 +39,7 @@ def get_llm_response(query):
     # 今回のプロンプトを追加
     messages += [{"role": "user", "content": query}]
     response = client.client.chat.completions.create(
-        model=client.model, # model="gpt-4o-mini",
+        model=client.model,
         messages=messages,
         temperature=0
     )
