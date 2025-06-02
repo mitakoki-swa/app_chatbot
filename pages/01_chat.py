@@ -35,8 +35,8 @@ def get_llm_response(query):
     # 過去プロンプトを順番に追加
     messages += [
         {"role": "assistant", "content": log["content"]} if log["role"] == "assistant"
-         else {"role": "user", "content": log["content"]}
-         for log in st.session_state.chat_log
+        else {"role": "user", "content": log["content"]}
+        for log in st.session_state.chat_log
     ]
     # 今回のプロンプトを追加
     messages += [{"role": "user", "content": query}]
@@ -65,6 +65,7 @@ def chat_interface():
 
         with st.chat_message("assistant"):
             st.write(answer)
+
         # 履歴に追加
         st.session_state.chat_log.append({"role": "user", "content": query})
         st.session_state.chat_log.append({"role": "assistant", "content": answer})
