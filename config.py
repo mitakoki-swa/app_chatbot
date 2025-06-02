@@ -10,5 +10,5 @@ class OpenAIClient:
         # OpenAI のクライアント設定
         self.api_key = os.getenv("OPENAI_API_KEY")
 
-        self.client = OpenAI(self.api_key)
+        self.client = OpenAI(api_key=self.api_key)
         self.model = "gpt-4o-mini"
