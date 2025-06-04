@@ -22,21 +22,25 @@ def init_page():
 
 def png_upload():
     """ PNGファイルのアップローダー """
-    # jpg, jpeg, pngを受け入れるアップローダーを作成してください
-    # まず、アップロードされたファイルをtemp folderに格納し、そのデータをエンコードしにいくコードを考えてみると分かりやすいかもです。
-    # ただ、できれば無駄なフォルダを作りたくないので、直接エンコードできればなお良しです。
-    picture = st.file_uploader("画像を選択", type=["png", "jpeg", "jpg"])
-    if picture is None:
+    picture = st.file_uploader(
+        label="画像を選択",
+        type=["png", "jpeg", "jpg"],
+        accept_multiple_files=False
+        )
+    if picture:
+        return picture.read()
+    else:
         return None
-    b64_pct = encode_image(picture)
-    return b64_pct
 
 
-def encode_image(picture):
+def encode_image(pct_byte):
     """ 画像をBase64エンコード """
-    b64_pct = base64.b64encode(picture.read()).decode("utf-8")
-    return b64_pct
+    return base64.b64encode(pct_byte).decode("utf-8")
 
+
+def show_pct(pct_byte):
+    """アップロードされた画像を表示"""
+    st.image(pct_byte)
 
 
 def get_prompt(filepath):
@@ -45,27 +49,36 @@ def get_prompt(filepath):
         return f.read()
 
 
-def get_llm_response(query, b64_pct=None):
+def get_llm_response(query, pct_b64=None):
     """ LLMにクエリを送信し、回答を取得 """
     prompt = get_prompt(PROMPT_FILE)
     # システムプロンプト入力
     messages = [{"role": "system", "content": prompt}]
     # 過去プロンプトを順番に追加
-    messages += [
-        {"role": "assistant", "content": log["content"]} if log["role"] == "assistant"
-        else {"role": "user", "content": log["content"]}
-        for log in st.session_state.picture_chat_log
-    ]
+    for log in st.session_state.picture_chat_log:
+        if log["role"] == "user":
+            messages.append({
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": log["content"]},
+                    {"type": "image_url", "image_url": {
+                        "url": f"data:image/jpeg;base64,{log['image']}"
+                        }
+                    }
+                ]
+            })
+        else:
+            messages.append({
+                "role": "assistant",
+                "content": log["content"]
+            })
     # 今回のプロンプトを追加
-    if b64_pct is None:
-        messages.append({"role": "user", "content": query})
-    else:
-        messages.append({
+    messages.append({
             "role": "user",
             "content": [
                 {"type": "text", "text": query},
                 {"type": "image_url", "image_url": {
-                    "url": f"data:image/jpeg;base64,{b64_pct}"
+                    "url": f"data:image/jpeg;base64,{pct_b64}"
                     }
                 }
             ]
@@ -79,36 +92,33 @@ def get_llm_response(query, b64_pct=None):
     answer = response.choices[0].message.content
     return answer
 
-def chat_interface():
+def chat_interface(pct_byte):
     """ chat機能全般 """
     # ログ表示
     for message in st.session_state.picture_chat_log:
         with st.chat_message(message["role"]):
             st.write(message["content"])
-
+    pct_b64 = encode_image(pct_byte)
     query = st.chat_input("質問を入力")
-    b64_pct = png_upload()
     if query:
-        answer = get_llm_response(query, b64_pct)
+        answer = get_llm_response(query, pct_b64)
 
         with st.chat_message("user"):
             st.write(query)
-            if b64_pct is not None:
-                st.image(
-                    f"data:image/jpeg;base64,{b64_pct}",
-                    caption="あなたがアップロードした画像"
-                )
 
         with st.chat_message("assistant"):
             st.write(answer)
 
         # 履歴に追加
-        st.session_state.picture_chat_log.append({"role": "user", "content": query})
+        st.session_state.picture_chat_log.append({"role": "user", "content": query, "image": pct_b64})
         st.session_state.picture_chat_log.append({"role": "assistant", "content": answer})
 
 def main():
     init_page()
-    chat_interface()
+    image = png_upload()
+    if image:
+        show_pct(image)
+        chat_interface(image)
 
 
 if __name__ == "__main__":
