@@ -12,9 +12,9 @@ PROMPT_FILE = "./prompts/01_SES.md"
 def init_page():
     """ ページ設定 """
     st.set_page_config(
-        page_title = "Echo Bot"
+        page_title = "text x llm"
     )
-    st.title("Echo Bot")
+    st.title("text x llm")
     if "chat_log" not in st.session_state:
         st.session_state.chat_log = []
 
