@@ -22,7 +22,7 @@ def init_page():
 
 def get_llm_response(query):
     """ LLMにクエリを送信し、回答を取得 """
-    if st.session_state.response_id is None:
+    if st.session_state.response_id is None or not st.session_state.chat_image_log:
         response = client.client.responses.create(
             model=client.image_model,
             input=query,
@@ -41,6 +41,9 @@ def get_llm_response(query):
         for output in response.output
         if output.type == "image_generation_call"
     ]
+    if not image_data:
+        st.error("申し訳ございません。画像を生成できませんでした。\n具体的に「○○を描いて」といった指示をいただけますと幸いです。")
+        st.stop()
     image_base64 = image_data[0]
     image_bytes = base64.b64decode(image_base64)
     image = Image.open(BytesIO(image_bytes)) # BytesIOを使って（保存されてない）メモリデータにopen関数を用いて画像化し、それをreturnします

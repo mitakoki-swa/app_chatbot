@@ -17,8 +17,8 @@ def init_page():
         page_title = "image2image x llm"
     )
     st.title("image2image x llm")
-    if "chat_image_log" not in st.session_state:
-        st.session_state.chat_image_log = []
+    if "image_image_log" not in st.session_state:
+        st.session_state.image_image_log = []
     if "response_id" not in st.session_state:
         st.session_state.response_id = None
 
@@ -59,7 +59,7 @@ def show_pct(pct_byte):
 
 def get_llm_response(query, pct_b64=None):
     """ LLMにクエリを送信し、回答を取得 """
-    if st.session_state.response_id is None:
+    if st.session_state.response_id is None or not st.session_state.image_image_log:
         # システムプロンプト
         prompt = get_prompt(PROMPT_FILE)
         messages = [{"role": "system", "content": prompt}]
@@ -107,7 +107,7 @@ def get_llm_response(query, pct_b64=None):
 def chat_interface(pct_byte):
     """ chat機能全般 """
     # ログ表示
-    for message in st.session_state.chat_image_log:
+    for message in st.session_state.image_image_log:
         with st.chat_message(message["role"]):
             if message["role"] == "user":
                 st.write(message["content"])
@@ -123,15 +123,14 @@ def chat_interface(pct_byte):
 
         with st.chat_message("assistant"):
             st.image(answer)
-        # 戻り値の画像をbyteに変換後、base64変換
+        # 戻り値の画像をバイトバッファに格納してbyteに変換後、base64変換
         buffer = BytesIO()
-        # JPEG 形式で保存する例ですが、必要に応じて PNG などに変更可能
         answer.save(buffer, format="PNG")
         buffer.seek(0)
         answer_b64 = encode_image(buffer.read())
         # 履歴に追加
-        st.session_state.chat_image_log.append({"role": "user", "content": query, "image": pct_b64})
-        st.session_state.chat_image_log.append({"role": "assistant", "image": answer_b64})
+        st.session_state.image_image_log.append({"role": "user", "content": query, "image": pct_b64})
+        st.session_state.image_image_log.append({"role": "assistant", "image": answer_b64})
 
 
 def main():
