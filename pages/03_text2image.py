@@ -1,12 +1,12 @@
+import base64
+from io import BytesIO
+from PIL import Image
 import streamlit as st
 
 from config import OpenAIClient
 
 # openai client
 client = OpenAIClient()
-
-# promptファイル
-PROMPT_FILE = "./prompts/03_createImage.md"
 
 def init_page():
     """ ページ設定 """
@@ -16,26 +16,35 @@ def init_page():
     st.title("text2image x llm")
     if "chat_image_log" not in st.session_state:
         st.session_state.chat_image_log = []
-
-
-def get_prompt(filepath):
-    """ システムプロンプトの取得 """
-    with open(filepath, "r", encoding="utf-8") as f:
-        return f.read()
+    if "response_id" not in st.session_state:
+        st.session_state.response_id = None
 
 
 def get_llm_response(query):
     """ LLMにクエリを送信し、回答を取得 """
-    prompt = get_prompt(PROMPT_FILE)
-    # LLMに投げる
-    response = client.client.images.generate(
-        model=client.image_model,
-        prompt=query,
-        n=1,
-        size="1024x1024"
-    )
-    answer = response.data[0].url
-    return answer
+    if st.session_state.response_id is None:
+        response = client.client.responses.create(
+            model=client.image_model,
+            input=query,
+            tools=[{"type": "image_generation"}],
+        )
+    else:
+        response = client.client.responses.create(
+            model=client.image_model,
+            previous_response_id=st.session_state.response_id,
+            input=query,
+            tools=[{"type": "image_generation"}],
+        )
+    st.session_state.response_id = response.id # ここで管理
+    image_data = [
+        output.result
+        for output in response.output
+        if output.type == "image_generation_call"
+    ]
+    image_base64 = image_data[0]
+    image_bytes = base64.b64decode(image_base64)
+    image = Image.open(BytesIO(image_bytes)) # BytesIOを使って（保存されてない）メモリデータにopen関数を用いて画像化し、それをreturnします
+    return image
 
 
 def chat_interface():
