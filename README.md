@@ -1,4 +1,6 @@
 # LLM Multimodal ChatBot
+Dockerを使用したマルチモーダルなチャットボットです。
+
 ## 仕様
 ### text2text
 - SES業界を熟知したChatBotです。こちらの質問に答えてくれます。
@@ -18,10 +20,27 @@
 - 渡した画像を指定通りに加工してくれます。
 - 加工してくれた画像に対しても、そのまま指示を出すことで追加加工が可能です。
 
+## 前提
+- Dockerがインストール・起動済みであること
+- OPENAI_API_KEYを取得していること
+
 ## 起動方法
-- `ctrl + @` ターミナル起動
-- `py -3.11 -m venv .venv`を実行（Pythonバージョンに応じて-3.11を変化させる）
-- `.venv/Scripts/activate`で仮想環境起動
-- `pip install -r requirements.txt`を実行しライブラリインストール
-- `streamlit run home.py`でアプリ起動
-  - 別途OPENAI_API_KEYが必要です。
+- UbuntuなどのLinux環境において、リポジトリをクローンしたいディレクトリに移動
+- `code .`でVS Codeを起動
+- `app_chatbot`リポジトリをクローン
+- `.env`ファイルをDockerfileと同階層に作成し、下記のように取得したOPENAI_API_KEYを環境変数に設定
+```
+OPENAI_API_KEY=your_api_key
+```
+- bashにおいて下記コマンドによりビルド
+```bash
+docker build -t your_image_name:latest .
+```
+- 環境変数を読み込ませてアプリを起動
+```bash
+docker run \
+  --rm \
+  --env-file .env \
+  -p 8501:8501 \
+  your_image_name:latest
+```
