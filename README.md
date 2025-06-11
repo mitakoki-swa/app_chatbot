@@ -44,3 +44,4 @@ docker run \
   -p 8501:8501 \
   your_image_name:latest
 ```
+- `http://localhost:8501`にアプリ起動
